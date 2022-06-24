@@ -1,0 +1,55 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    title #{story.name} - Storyblok
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+  body
+    h1(id="heading-name") #{story.name}
+    include storyblok.pug
+
+    script(type="text/javascript" src="//app.storyblok.com/f/storyblok-latest.js")
+    script(type="text/javascript").
+      storyblok.init({
+        accessToken: "#{STORYBLOK_ACCESS_TOKEN}"
+      })
+
+      // On the change event refresh the window
+      storyblok.on(["published", "change"], function (event) {
+        console.log("triggered published or change event.")
+        if (!event.slugChanged) {
+          location.reload(true)
+        }
+      })
+
+      storyblok.pingEditor(function () {
+        console.log("triggered ping editor event.")
+        if (storyblok.inEditor) {
+          storyblok.enterEditmode()
+          console.log("entered edit mode.")
+        }
+      })
+
+      storyblok.on("input", async function (payload) {
+        console.log("triggered input event.", payload)
+        const updatedStory = { ...payload.story }
+
+        updatedStory.content = storyblok.addComments(payload.story.content, payload.story.id)
+        //- console.log("updated story", updatedStory)
+
+        //- For Live preview
+        //- const headers = {
+        //-   "Content-Type": "application/json",
+        //-   "Accept": "text/html; charset=utf-8"
+        //- }
+        //- const response = await fetch("/preview", {
+        //-   method: "POST",
+        //-   headers,
+        //-   body: JSON.stringify({ story: updatedStory })
+        //- })
+        //- const parsedData = await response.text()
+        
+        //- let newHtml = document.open("text/html", "replace")
+        //- newHtml.write(parsedData)
+        //- newHtml.close()
+      })
